@@ -1,9 +1,11 @@
-# "org" ensures this Service is used with the correct Serverless Framework Access Key.
-org: hotelmanager0
 service: my-lambda-project
+frameworkVersion: "4"
 
 provider:
   name: aws
+  architecture: x86_64
+  runtime: nodejs20.x
+  region: ap-southeast-1
   iam:
     role:
       statements:
@@ -11,20 +13,21 @@ provider:
           Action:
             - s3:GetObject
             - s3:PutObject
-          Resource: "arn:aws:s3:::hm-image-storage-test/*"
-  runtime: nodejs20.x
-  region: ap-southeast-1
-  apiGateway:
-    binaryMediaTypes:
-      - "image/*"
+          Resource: arn:aws:s3:::hm-image-storage-test/*
 
 functions:
   myHandler:
     handler: index.handler
+    layers:
+      - arn:aws:lambda:ap-southeast-1:621909671017:layer:sharp-lambda-x64:1
     events:
       - s3:
-        bucket: hm-image-storage-test
-        event: s3:ObjectCreated:*
-        rules:
-          - prefix: temp-uploads/
-        existing: true
+          bucket: hm-image-storage-test
+          event: s3:ObjectCreated:*
+          rules:
+            - prefix: temp-uploads/
+
+build:
+  esbuild:
+    external:
+      - sharp

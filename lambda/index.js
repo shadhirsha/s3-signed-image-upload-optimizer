@@ -4,6 +4,7 @@ const {
   PutObjectCommand,
 } = require("@aws-sdk/client-s3");
 const path = require("path");
+const sharp = require("sharp");
 
 const s3 = new S3Client({});
 
