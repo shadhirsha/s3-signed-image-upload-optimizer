@@ -18,7 +18,7 @@ exports.handler = async (event) => {
   const baseName = path.basename(key, ext);
   const dirName = "uploads";
 
-  const outputKey = `${dirName}/${baseName}200x200${ext}`;
+  const outputKey = `${dirName}/${baseName}200x200.webp`;
 
   try {
     const getCommand = new GetObjectCommand({ Bucket: bucket, Key: key });
@@ -33,16 +33,25 @@ exports.handler = async (event) => {
 
     const inputBuffer = await streamToBuffer(response.Body);
 
+    const optimizedBuffer = await sharp(inputBuffer)
+      .resize(250)
+      .webp({ quality: 80 })
+      .toBuffer();
+
     await s3.send(
       new PutObjectCommand({
         Bucket: bucket,
         Key: outputKey,
-        Body: inputBuffer,
+        Body: optimizedBuffer,
         ContentType: "image/webp",
       }),
     );
 
     console.log(`Successfully optimized ${key} and saved to ${outputKey}`);
+
+    const publicUrl = `https://hm-image-storage-test.s3.${process.env.AWS_REGION}.amazonaws.com/${outputKey}`;
+
+    console.log(`PublicURL: ${publicUrl}`);
 
     return { status: "success", file: outputKey };
   } catch (error) {
