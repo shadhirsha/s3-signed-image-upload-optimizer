@@ -13,6 +13,8 @@ provider:
           Action:
             - s3:GetObject
             - s3:PutObject
+            - s3:DeleteObject
+            - s3:ListBucket
           Resource: arn:aws:s3:::hm-image-storage-test/*
 
 functions:
@@ -24,6 +26,11 @@ functions:
       - s3:
           bucket: hm-image-storage-test
           event: s3:ObjectCreated:*
+          rules:
+            - prefix: temp-uploads/
+      - s3:
+          bucket: hm-image-storage-test
+          event: s3:ObjectRemoved:*
           rules:
             - prefix: temp-uploads/
 

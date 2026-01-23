@@ -2,6 +2,7 @@ const {
   S3Client,
   GetObjectCommand,
   PutObjectCommand,
+  DeleteObjectCommand,
 } = require("@aws-sdk/client-s3");
 const path = require("path");
 const sharp = require("sharp");
@@ -52,6 +53,15 @@ exports.handler = async (event) => {
     const publicUrl = `https://hm-image-storage-test.s3.${process.env.AWS_REGION}.amazonaws.com/${outputKey}`;
 
     console.log(`PublicURL: ${publicUrl}`);
+
+    const resposne = await s3.send(
+      new DeleteObjectCommand({
+        Bucket: bucket,
+        Key: event.Records[0].s3.object.key,
+      }),
+    );
+
+    console.log("DELETE RESPONSE: ", response);
 
     return { status: "success", file: outputKey };
   } catch (error) {
