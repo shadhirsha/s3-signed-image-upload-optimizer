@@ -19,8 +19,6 @@ exports.handler = async (event) => {
   const baseName = path.basename(key, ext);
   const dirName = "uploads";
 
-  const outputKey = `${dirName}/${baseName}200x200.webp`;
-
   try {
     const getCommand = new GetObjectCommand({ Bucket: bucket, Key: key });
     const response = await s3.send(getCommand);
@@ -34,36 +32,37 @@ exports.handler = async (event) => {
 
     const inputBuffer = await streamToBuffer(response.Body);
 
-    const optimizedBuffer = await sharp(inputBuffer)
-      .resize(250)
-      .webp({ quality: 80 })
-      .toBuffer();
+    const uploadedFiles = await Promise.all(
+      [200, 400, 600].map(async (i) => {
+        const outputKey = `${dirName}/${baseName}-${i}w.webp`;
+        const optimizedBuffer = await sharp(inputBuffer)
+          .resize(i)
+          .webp({ quality: 80 })
+          .toBuffer();
 
-    await s3.send(
-      new PutObjectCommand({
-        Bucket: bucket,
-        Key: outputKey,
-        Body: optimizedBuffer,
-        ContentType: "image/webp",
+        await s3.send(
+          new PutObjectCommand({
+            Bucket: bucket,
+            Key: outputKey,
+            Body: optimizedBuffer,
+            ContentType: "image/webp",
+          }),
+        );
+
+        return `https://${bucket}.s3.${process.env.AWS_REGION}.amazonaws.com/${outputKey}`;
       }),
     );
 
-    console.log(`Successfully optimized ${key} and saved to ${outputKey}`);
+    // const deleteResponse = await s3.send(
+    //   new DeleteObjectCommand({
+    //     Bucket: bucket,
+    //     Key: event.Records[0].s3.object.key,
+    //   }),
+    // );
 
-    const publicUrl = `https://hm-image-storage-test.s3.${process.env.AWS_REGION}.amazonaws.com/${outputKey}`;
+    // console.log("DELETE RESPONSE: ", deleteResponse);
 
-    console.log(`PublicURL: ${publicUrl}`);
-
-    const resposne = await s3.send(
-      new DeleteObjectCommand({
-        Bucket: bucket,
-        Key: event.Records[0].s3.object.key,
-      }),
-    );
-
-    console.log("DELETE RESPONSE: ", response);
-
-    return { status: "success", file: outputKey };
+    return { status: "success", files: uploadedFiles };
   } catch (error) {
     console.error("Error processing image:", error);
     throw error;
