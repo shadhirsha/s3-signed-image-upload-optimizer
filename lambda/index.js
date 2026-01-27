@@ -33,8 +33,8 @@ exports.handler = async (event) => {
     const inputBuffer = await streamToBuffer(response.Body);
 
     const uploadedFiles = await Promise.all(
-      [200, 400, 600].map(async (i) => {
-        const outputKey = `${dirName}/${baseName}-${i}w.webp`;
+      [400, 800, 1200].map(async (i) => {
+        const outputKey = `${dirName}/${baseName}-${i}w.${ext}`;
         const optimizedBuffer = await sharp(inputBuffer)
           .resize(i)
           .webp({ quality: 80 })
@@ -53,14 +53,12 @@ exports.handler = async (event) => {
       }),
     );
 
-    // const deleteResponse = await s3.send(
-    //   new DeleteObjectCommand({
-    //     Bucket: bucket,
-    //     Key: event.Records[0].s3.object.key,
-    //   }),
-    // );
-
-    // console.log("DELETE RESPONSE: ", deleteResponse);
+    await s3.send(
+      new DeleteObjectCommand({
+        Bucket: bucket,
+        Key: event.Records[0].s3.object.key,
+      }),
+    );
 
     return { status: "success", files: uploadedFiles };
   } catch (error) {
