@@ -58,16 +58,16 @@ function App() {
       </div>
       <h3>Out Images Screen Test</h3>
       <p>
-        https://hm-image-storage-test.s3.ap-southeast-1.amazonaws.com/uploads/1769440163073-photo-800w.webp
+        https://hm-image-storage-test.s3.ap-southeast-1.amazonaws.com/uploads/1769493438167-photo-400w.jpg
       </p>
       <img
         src={
-          "https://hm-image-storage-test.s3.ap-southeast-1.amazonaws.com/uploads/1769440163073-photo-800w.webp"
+          "https://hm-image-storage-test.s3.ap-southeast-1.amazonaws.com/uploads/1769493438167-photo-600w.jpg"
         }
         alt="logo"
-        srcSet="https://hm-image-storage-test.s3.ap-southeast-1.amazonaws.com/uploads/1769440163073-photo-400w.webp 400w, 
-        https://hm-image-storage-test.s3.ap-southeast-1.amazonaws.com/uploads/1769440163073-photo-800w.webp 800w, 
-        https://hm-image-storage-test.s3.ap-southeast-1.amazonaws.com/uploads/1769440163073-photo-1200w.webp 1200w"
+        srcSet="https://hm-image-storage-test.s3.ap-southeast-1.amazonaws.com/uploads/1769493438167-photo-400w.jpg 400w, 
+        https://hm-image-storage-test.s3.ap-southeast-1.amazonaws.com/uploads/1769493438167-photo-600w.jpg 600w, 
+        https://hm-image-storage-test.s3.ap-southeast-1.amazonaws.com/uploads/1769493438167-photo-800w.jpg 800w"
         sizes="(max-width: 800px) 100vw, 
          800px"
       />

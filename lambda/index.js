@@ -9,11 +9,24 @@ const sharp = require("sharp");
 
 const s3 = new S3Client({});
 
+const streamToBuffer = (stream) =>
+  new Promise((resolve, reject) => {
+    const chunks = [];
+    stream.on("data", (chunk) => chunks.push(chunk));
+    stream.on("error", reject);
+    stream.on("end", () => resolve(Buffer.concat(chunks)));
+  });
+
 exports.handler = async (event) => {
-  const bucket = event.Records[0].s3.bucket.name;
-  const key = decodeURIComponent(
-    event.Records[0].s3.object.key.replace(/\+/g, " "),
-  );
+  const record = event.Records?.[0];
+  if (!record) return;
+
+  const bucket = record.s3.bucket.name;
+
+  const key = decodeURIComponent(record.s3.object.key.replace(/\+/g, " "));
+
+  // Safety: process only temp-uploads
+  if (!key.startsWith("temp-uploads/")) return;
 
   const ext = path.extname(key);
   const baseName = path.basename(key, ext);
@@ -21,20 +34,12 @@ exports.handler = async (event) => {
 
   try {
     const getCommand = new GetObjectCommand({ Bucket: bucket, Key: key });
-    const response = await s3.send(getCommand);
-    const streamToBuffer = (stream) =>
-      new Promise((resolve, reject) => {
-        const chunks = [];
-        stream.on("data", (chunk) => chunks.push(chunk));
-        stream.on("error", reject);
-        stream.on("end", () => resolve(Buffer.concat(chunks)));
-      });
-
-    const inputBuffer = await streamToBuffer(response.Body);
+    const getResponse = await s3.send(getCommand);
+    const inputBuffer = await streamToBuffer(getResponse.Body);
 
     const uploadedFiles = await Promise.all(
-      [400, 800, 1200].map(async (i) => {
-        const outputKey = `${dirName}/${baseName}-${i}w.${ext}`;
+      [400, 600, 800].map(async (i) => {
+        const outputKey = `${dirName}/${baseName}-${i}w${ext}`;
         const optimizedBuffer = await sharp(inputBuffer)
           .resize(i)
           .webp({ quality: 80 })
